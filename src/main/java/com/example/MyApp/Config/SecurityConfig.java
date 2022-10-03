@@ -3,9 +3,6 @@ package com.example.MyApp.Config;
 import com.example.MyApp.Security.JwtAuthenticationEntryPoint;
 import com.example.MyApp.Security.JwtAuthenticationFilter;
 import com.example.MyApp.Service.ServiceImpl.UserDetailsServiceImpl;
-
-import org.jetbrains.annotations.NotNull;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -14,7 +11,6 @@ import org.springframework.security.config.BeanIds;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfiguration;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -24,42 +20,45 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
-
 @Configuration
 @EnableWebSecurity
-public class SecurityConfig extends WebSecurityConfiguration {
-    @Autowired private UserDetailsServiceImpl userDetailsService;
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
-    @Autowired private JwtAuthenticationEntryPoint handler;
+    private UserDetailsServiceImpl userDetailsService;
 
-    public SecurityConfig(UserDetailsServiceImpl userDetailsService, JwtAuthenticationEntryPoint handler) {
+    private JwtAuthenticationEntryPoint handler;
+
+    public SecurityConfig(UserDetailsServiceImpl userDetailsService, JwtAuthenticationEntryPoint handler)
+    {
         this.userDetailsService = userDetailsService;
         this.handler = handler;
     }
 
     @Bean
-    public JwtAuthenticationFilter jwtAuthenticationFilter() {
+    public JwtAuthenticationFilter jwtAuthenticationFilter()
+    {
         return new JwtAuthenticationFilter();
     }
 
     @Bean(BeanIds.AUTHENTICATION_MANAGER)
-    //@Override
-    public AuthenticationManager authenticationManagerBean() throws Exception {
-        return (AuthenticationManager) super.clone();
+    @Override
+    public AuthenticationManager authenticationManagerBean() throws Exception{
+        return super.authenticationManagerBean();
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder() {
+    public PasswordEncoder passwordEncoder()
+    {
         return new BCryptPasswordEncoder();
     }
 
-    //@Override
+    @Override
     public void configure(AuthenticationManagerBuilder authenticationManagerBuilder) throws Exception {
         authenticationManagerBuilder.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder());
     }
 
     @Bean
-    public CorsFilter corsFilter() {
+    public CorsFilter corsFilter(){
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
@@ -76,7 +75,7 @@ public class SecurityConfig extends WebSecurityConfiguration {
         return new CorsFilter(source);
     }
 
-    //@Override
+    @Override
     public void configure(HttpSecurity httpSecurity) throws Exception {
         httpSecurity
                 .cors()
