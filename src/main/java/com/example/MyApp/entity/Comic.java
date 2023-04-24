@@ -11,7 +11,7 @@ public class Comic {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private int comic_id;
 
-    @Column(name = "title", nullable = false)
+    @Column(name = "title", nullable = false, unique = true)
     private String title;
 
     @Column(name = "publisher", nullable = false)
@@ -20,6 +20,6 @@ public class Comic {
     @Column(name = "release_date", nullable = false)
     private String release_date;
 
-    @Column(name = "image_url", nullable = false)
-    private String image_url;
+    @Column(name = "publication_date", nullable = false)
+    private String publication_date;
 }

@@ -20,13 +20,11 @@ public class ComicApplication {
 	@PostConstruct //To initialize the database on the very first startup
 	public void initializeDatabase() throws IOException
 	{
+		scrape.scrape();
 		if(comicRepository.count() == 0)
 		{
-			scrape.initializeLists();
 			scrape.updateDatabase();
 		}
-
-		scrape.scrape();
 	}
 
 	public static void main(String[] args) {
@@ -43,7 +41,7 @@ public class ComicApplication {
 			System.out.println("Database purged.");
 		}
 
-		scrape.initializeLists();
+		scrape.scrape();
 		scrape.updateDatabase(); //Updates the database with new releases
 		System.out.println("Database updated.");
 	}

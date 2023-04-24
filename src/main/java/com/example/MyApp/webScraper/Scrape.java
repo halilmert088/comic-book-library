@@ -19,40 +19,24 @@ import java.util.List;
 public class Scrape {
     private final ComicRepository comicRepository;
 
-    //maybe make the lists static?
-    private List<String> dateList = new ArrayList<String>();
-    private List<String> publisherList = new ArrayList<String>();
-    private List<String> titleList = new ArrayList<String>();
-    private List<String> coverList = new ArrayList<String>();
+    //List to store the raw string data we get from the database
+    List<String> data = new ArrayList<>();
 
-    Elements titles;
-    Elements dates;
-    Elements publishers;
-    Elements covers;
+    //Scrape the database for relevant data and store the values in a string list
+    public void scrape() throws IOException
+    {
+        //Sayfa sayfa olunca diğer sayfalara da bakabilecek bir impl lazım
 
-    //Get the necessary values from each element and store them in separate string lists
-    public void initializeLists() throws IOException {
-        scrape();
-        for(Element title : this.titles)
+        //Şu an sitede ikinci bir sayfa olmadığı için impl denesem bile test edemem, ikinci bir sayfa eklenince buraya
+        //yeniden bakacağım
+        Document url = Jsoup.connect("https://www.comics.org/on_sale_weekly//").get();
+
+        Elements table = url.select("table.sortable_listing").select("tr");
+
+        for (Element e : table.select("td"))
         {
-            titleList.add(title.text());
+            data.add(e.text());
         }
-
-        for(Element date : this.dates)
-        {
-            dateList.add(date.child(0).text());
-        }
-
-        for (Element publisher : this.publishers)
-        {
-            publisherList.add(publisher.text());
-        }
-
-        for (Element cover : this.covers)
-        {
-            coverList.add(cover.attr("data-src"));
-        }
-
     }
 
     //Clear every entry in the database
@@ -64,35 +48,35 @@ public class Scrape {
 
     //Update the database with the new release entries
     public void updateDatabase() throws IOException {
-        List<Comic> comicList = new ArrayList<Comic>();
 
-        scrape();
-        for(int i = 0; i < titleList.size(); i++)
+        List<Comic> tmp = new ArrayList<>();
+
+        //Set a comic entity list with the raw text data
+        for(int i = 0; i < data.size(); i = i + 4)
         {
-            Comic comic = new Comic();
+            Comic temp = new Comic();
 
-            comic.setTitle(titleList.get(i));
-            comic.setRelease_date(dateList.get(i));
-            comic.setPublisher(publisherList.get(i));
-            comic.setImage_url(coverList.get(i));
+            temp.setPublisher(data.get(i));
+            temp.setTitle(data.get(i+1));
 
-            comicList.add(comic); // UserList created to be able to sort the comics as we wish later
+            //Mostly for cosmetics, I thought NA would look fancier than just a dash
+            if(data.get(i+2).equals("—"))
+                temp.setPublication_date("NA");
+            else
+                temp.setPublication_date(data.get(i+2));
+
+            temp.setRelease_date(data.get(i+3));
+
+            tmp.add(temp);
+
+            temp = null;
         }
 
-        for(int i = 0; i < comicList.size(); i++)
+        //Saves the entity list in the database
+        for(int i=0; i < tmp.size(); i++)
         {
-            comicRepository.save(comicList.get(i));
+            comicRepository.save(tmp.get(i));
         }
     }
 
-    //Web scrape
-    public void scrape() throws IOException
-    {
-        Document url = Jsoup.connect("https://www.comics.org/on_sale_weekly//").get();
-
-        Elements table = url.select("table.sortable_listing").select("tr");
-        Elements e = table.select("td");
-        System.out.println(e.get(1));
-
-    }
 }
